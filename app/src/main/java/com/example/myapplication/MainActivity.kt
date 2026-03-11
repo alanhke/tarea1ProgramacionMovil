@@ -1,22 +1,25 @@
 package com.example.myapplication
 
 import android.os.Bundle
+import android.util.Patterns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.runtime.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -159,6 +162,9 @@ fun WelcomeScreen(
 
 @Composable
 fun LoginForm(onBack: () -> Unit) {
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -180,22 +186,28 @@ fun LoginForm(onBack: () -> Unit) {
             )
             Spacer(modifier = Modifier.height(30.dp))
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = email,
+                onValueChange = { email = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
             Spacer(modifier = Modifier.height(16.dp))
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = password,
+                onValueChange = { password = it },
                 label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
             Spacer(modifier = Modifier.height(30.dp))
             Button(
                 onClick = {},
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = email.isNotEmpty() && password.isNotEmpty()
             ) {
                 Text("Login")
             }
@@ -211,22 +223,34 @@ fun LoginForm(onBack: () -> Unit) {
 
 @Composable
 fun RegisterForm(onBack: () -> Unit) {
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
+
+    // Validations
+    val isNameValid = name.isNotBlank() && name.all { it.isLetter() || it.isWhitespace() }
+    val isEmailValid = Patterns.EMAIL_ADDRESS.matcher(email).matches()
+    val isPhoneValid = phone.length == 10 && phone.all { it.isDigit() }
+    val arePasswordsEqual = password.isNotEmpty() && password == confirmPassword
+    
+    val isFormValid = isNameValid && isEmailValid && isPhoneValid && arePasswordsEqual
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF6C63FF))
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(32.dp)
+                .verticalScroll(rememberScrollState())
                 .background(Color.White, RoundedCornerShape(32.dp))
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
             Spacer(modifier = Modifier.height(40.dp))
 
             Text(
@@ -238,35 +262,69 @@ fun RegisterForm(onBack: () -> Unit) {
             Spacer(modifier = Modifier.height(30.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = name,
+                onValueChange = { name = it },
                 label = { Text("Name") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = name.isNotEmpty() && !isNameValid
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = email,
+                onValueChange = { email = it },
                 label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = email.isNotEmpty() && !isEmailValid,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = phone,
+                onValueChange = { if (it.length <= 10) phone = it },
+                label = { Text("Phone (10 digits)") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = phone.isNotEmpty() && !isPhoneValid,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
                 label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = { Text("Confirm Password") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = true,
+                isError = confirmPassword.isNotEmpty() && !arePasswordsEqual,
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
             )
 
             Spacer(modifier = Modifier.height(30.dp))
 
             Button(
                 onClick = {},
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isFormValid
             ) {
                 Text("Create Account")
             }
